@@ -32,7 +32,6 @@ jobs:
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
-      - run: cd package
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
@@ -69,6 +68,7 @@ jobs:
         shell: bash
       - name: Install dependencies
         run: yarn install
+        working-directory: ./package
       - name: Setup node x86
         uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
@@ -81,24 +81,24 @@ jobs:
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
-          options: "--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build"
+          options: "--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build/package"
           run: ${{ matrix.settings.build }}
       - name: Build
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
+        working-directory: ./package
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: ${{ env.APP_NAME }}.*.node
+          path: package/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
   publish:
     name: Publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cd package
       - name: Setup node
         uses: actions/setup-node@v4
         with:
@@ -106,16 +106,20 @@ jobs:
           cache: yarn
       - name: Install dependencies
         run: yarn install
+        working-directory: ./package
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: package/artifacts
       - name: Move artifacts
         run: yarn artifacts
+        working-directory: ./package
       - name: List packages
         run: ls -R ./npm
+        working-directory: ./package
         shell: bash
       - name: Publish
+        working-directory: ./package
         run: |
           npm config set provenance true
           if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";

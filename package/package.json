@@ -30,9 +30,6 @@
 	"dependencies": {
 		"esbuild": "^0.25.4"
 	},
-	"optionalDependencies": {
-		"elytra-win32-x64-msvc": "0.0.0"
-	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/programordie2/elytra.git"
