@@ -33,6 +33,14 @@
 	"optionalDependencies": {
 		"elytra-win32-x64-msvc": "0.0.0"
 	},
-	"repository": "https://github.com/programordie2/elytra",
-	"description": "todo"
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/programordie2/elytra.git"
+	},
+	"description": "todo",
+	"author": "programORdie",
+	"bugs": {
+		"url": "https://github.com/programordie2/elytra/issues"
+	},
+	"homepage": "https://github.com/programordie2/elytra#readme"
 }
