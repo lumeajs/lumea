@@ -30,6 +30,9 @@ jobs:
             target: x86_64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
+    defaults:
+      run:
+        working-directory: ./package
     steps:
       - uses: actions/checkout@v4
       - name: Setup node
@@ -38,7 +41,6 @@ jobs:
         with:
           node-version: 20
           cache: yarn
-        working-directory: ./package
       - name: Install
         uses: dtolnay/rust-toolchain@stable
         if: ${{ !matrix.settings.docker }}
@@ -76,7 +78,6 @@ jobs:
           node-version: 20
           cache: yarn
           architecture: x86
-        working-directory: ./package
       - name: Build in docker
         uses: addnab/docker-run-action@v3
         if: ${{ matrix.settings.docker }}
@@ -104,7 +105,6 @@ jobs:
         with:
           node-version: 20
           cache: yarn
-        working-directory: ./package
       - name: Install dependencies
         run: yarn install
       - name: Download all artifacts
