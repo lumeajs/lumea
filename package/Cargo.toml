@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "elytra"
+name = "luminon"
 version = "0.0.0"
 
 [lib]
