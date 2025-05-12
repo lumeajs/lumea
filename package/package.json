@@ -24,5 +24,10 @@
 	},
 	"dependencies": {
 		"esbuild": "^0.25.4"
+	},
+	"optionalDependencies": {
+		"elytra-win32-x64-msvc": "0.0.0",
+		"elytra-darwin-x64": "0.0.0",
+		"elytra-linux-x64-gnu": "0.0.0"
 	}
 }
