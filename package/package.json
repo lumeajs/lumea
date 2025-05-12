@@ -1,0 +1,28 @@
+{
+	"name": "elytra",
+	"version": "0.0.0",
+	"main": "index.js",
+	"types": "index.d.ts",
+	"napi": {
+		"name": "elytra",
+		"triples": {}
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@napi-rs/cli": "^2.18.4"
+	},
+	"engines": {
+		"node": ">= 18"
+	},
+	"scripts": {
+		"artifacts": "napi artifacts",
+		"build": "napi build --platform --release --js build.js --dts build.d.ts",
+		"build:debug": "napi build --platform",
+		"prepublishOnly": "napi prepublish -t npm",
+		"universal": "napi universal",
+		"version": "napi version"
+	},
+	"dependencies": {
+		"esbuild": "^0.25.4"
+	}
+}

@@ -9,10 +9,10 @@
 //
 
 import fs from "node:fs";
-import { spawnSync } from "node:child_process";
 
+import { zipAssets } from "./build.js";
 import { build } from "esbuild";
-import { forceNodeProtocol } from "./force-node-protocol.js";
+import { forceNodeProtocol } from "../builder/force-node-protocol.js";
 
 const args = process.argv.slice(2);
 
@@ -59,12 +59,7 @@ fs.mkdirSync(newAssets, { recursive: true });
 fs.copyFileSync("bundle.js", `${newAssets}/bundle.js`);
 fs.cpSync(assetsDir, newAssetsStatic, { recursive: true });
 
-console.log("Moving extra assets complete!");
-console.log("Building binary...");
-
-// Run the prebuild script
-const command = ["./builder.exe", binPath, newAssets, outPath];
-spawnSync(command[0], command.slice(1), { stdio: "inherit" });
+zipAssets(binPath, newAssets, outPath);
 
 console.log("Building complete!");
 console.log("Cleaning up...");
