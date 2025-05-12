@@ -3,8 +3,7 @@
 // Usage:
 //   bun index.js \
 //     --binary=path/to/your_binary \
-//     --assets=path/to/static_assets \
-//     --js-entry=path/to/entry.js \
+//     --dir=path/to/data \
 //     --out=path/to/packed_binary
 //
 
@@ -12,17 +11,14 @@ import fs from "node:fs";
 
 import { zipAssets } from "./build.js";
 import { build } from "esbuild";
-import { forceNodeProtocol } from "../builder/force-node-protocol.js";
+import { forceNodeProtocol } from "./force-node-protocol.js";
 
 const args = process.argv.slice(2);
 
 const binPath = args.find((arg) => arg.startsWith("--binary="))?.split("=")[1];
-const assetsDir = args
-	.find((arg) => arg.startsWith("--assets="))
-	?.split("=")[1];
-const jsEntry = args
-	.find((arg) => arg.startsWith("--js-entry="))
-	?.split("=")[1];
+const dirPath = args.find((arg) => arg.startsWith("--dir="))?.split("=")[1];
+const assetsDir = dirPath + "/assets";
+const jsEntry = dirPath + "/index.js";
 const outPath = args.find((arg) => arg.startsWith("--out="))?.split("=")[1];
 
 if (!binPath || !assetsDir || !jsEntry || !outPath) {

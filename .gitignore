@@ -1,4 +1,5 @@
 node_modules/
 target/
 *.exe
+test/
 test_files/

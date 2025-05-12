@@ -6,9 +6,11 @@ npm
 .eslintrc
 .prettierignore
 rustfmt.toml
-yarn.lock
+*.lock
 *.node
 .yarn
 __test__
 renovate.json
 test_files
+*.rs
+*.toml
