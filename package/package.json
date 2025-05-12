@@ -1,44 +1,41 @@
 {
-	"name": "@luminon/cli",
-	"version": "0.0.2",
-	"main": "index.js",
-	"types": "index.d.ts",
-	"napi": {
-		"name": "cli",
-		"triples": {
-			"defaults": false,
-			"additional": [
-				"x86_64-pc-windows-msvc"
-			]
-		}
-	},
-	"license": "MIT",
-	"devDependencies": {
-		"@napi-rs/cli": "^2.18.4"
-	},
-	"engines": {
-		"node": ">= 18"
-	},
-	"scripts": {
-		"artifacts": "napi artifacts",
-		"build": "napi build --platform --release --js build.js --dts build.d.ts",
-		"build:debug": "napi build --platform",
-		"prepublishOnly": "napi prepublish -t npm",
-		"universal": "napi universal",
-		"version": "napi version"
-	},
-	"dependencies": {
-		"esbuild": "^0.25.4"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/programordie2/luminon.git"
-	},
-	"description": "todo",
-	"author": "programORdie",
-	"bugs": {
-		"url": "https://github.com/programordie2/luminon/issues"
-	},
-	"url": "https://github.com/programORdie2/luminon",
-	"homepage": "https://github.com/programordie2/luminon#readme"
+  "name": "@luminon/cli",
+  "version": "0.0.2",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "cli",
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-pc-windows-msvc"
+      ]
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release --js build.js --dts build.d.ts",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "universal": "napi universal",
+    "version": "napi version"
+  },
+  "dependencies": {
+    "esbuild": "^0.25.4"
+  },
+  "repository": "https://github.com/programordie2/luminon",
+  "description": "todo",
+  "author": "programORdie",
+  "bugs": {
+    "url": "https://github.com/programordie2/luminon/issues"
+  },
+  "url": "https://github.com/programORdie2/luminon",
+  "homepage": "https://github.com/programordie2/luminon#readme"
 }
