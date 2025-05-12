@@ -35,17 +35,20 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
+        working-directory: ./package
         with:
           node-version: 20
           cache: yarn
       - name: Install
         uses: dtolnay/rust-toolchain@stable
         if: ${{ !matrix.settings.docker }}
+        working-directory: ./package
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
       - name: Cache cargo
         uses: actions/cache@v4
+        working-directory: ./package
         with:
           path: |
             ~/.cargo/registry/index/
@@ -55,23 +58,27 @@ jobs:
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
       - uses: goto-bus-stop/setup-zig@v2
+        working-directory: ./package
         if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' || matrix.settings.target == 'armv7-unknown-linux-musleabihf' }}
         with:
           version: 0.13.0
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
+        working-directory: ./package
         shell: bash
       - name: Setup node x86
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
+        working-directory: ./package
       - name: Install dependencies
         run: yarn install
         working-directory: ./package
       - name: Setup node x86
         uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
+        working-directory: ./package
         with:
           node-version: 20
           cache: yarn
@@ -90,6 +97,7 @@ jobs:
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        working-directory: ./package
         with:
           name: bindings-${{ matrix.settings.target }}
           path: package/${{ env.APP_NAME }}.*.node
