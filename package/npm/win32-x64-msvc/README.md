@@ -1,3 +1,3 @@
-# `elytra-win32-x64-msvc`
+# `@elytra/cli-win32-x64-msvc`
 
-This is the **x86_64-pc-windows-msvc** binary for `elytra`
+This is the **x86_64-pc-windows-msvc** binary for `@elytra/cli`

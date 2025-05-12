@@ -1,5 +1,5 @@
 {
-  "name": "elytra-win32-x64-msvc",
+  "name": "@elytra/cli-win32-x64-msvc",
   "version": "0.0.0",
   "os": [
     "win32"
@@ -7,9 +7,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "elytra.win32-x64-msvc.node",
+  "main": "cli.win32-x64-msvc.node",
   "files": [
-    "elytra.win32-x64-msvc.node"
+    "cli.win32-x64-msvc.node"
   ],
   "license": "MIT",
   "engines": {

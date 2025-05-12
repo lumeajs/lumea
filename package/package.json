@@ -1,11 +1,16 @@
 {
-	"name": "elytra",
+	"name": "@elytra/cli",
 	"version": "0.0.0",
 	"main": "index.js",
 	"types": "index.d.ts",
 	"napi": {
-		"name": "elytra",
-		"triples": {}
+		"name": "cli",
+		"triples": {
+			"defaults": false,
+			"additional": [
+				"x86_64-pc-windows-msvc"
+			]
+		}
 	},
 	"license": "MIT",
 	"devDependencies": {
@@ -26,8 +31,8 @@
 		"esbuild": "^0.25.4"
 	},
 	"optionalDependencies": {
-		"elytra-win32-x64-msvc": "0.0.0",
-		"elytra-darwin-x64": "0.0.0",
-		"elytra-linux-x64-gnu": "0.0.0"
-	}
+		"elytra-win32-x64-msvc": "0.0.0"
+	},
+	"repository": "https://github.com/programordie2/elytra",
+	"description": "todo"
 }
