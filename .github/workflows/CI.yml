@@ -100,6 +100,9 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./package
     steps:
       - uses: actions/checkout@v4
       - name: Setup node
