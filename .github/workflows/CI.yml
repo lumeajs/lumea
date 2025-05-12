@@ -78,6 +78,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          cache-dependency-path: package/yarn.lock
           architecture: x86
       - name: Build in docker
         uses: addnab/docker-run-action@v3
@@ -94,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: ${{ env.APP_NAME }}.*.node
+          path: ./package/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
   publish:
     name: Publish
@@ -106,6 +107,7 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+          cache-dependency-path: package/yarn.lock
       - name: Install dependencies
         run: yarn install
       - name: Download all artifacts
