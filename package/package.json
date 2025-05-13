@@ -1,12 +1,13 @@
 {
 	"name": "@luminon/cli",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"index.js",
 		"build.d.ts",
-		"build.js"
+		"build.js",
+		"force-node-protocol.js"
 	],
 	"bin": {
 		"luminon": "./index.js"
