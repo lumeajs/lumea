@@ -12,6 +12,7 @@
 	"bin": {
 		"luminon": "./index.js"
 	},
+	"type": "module",
 	"napi": {
 		"name": "cli",
 		"triples": {
@@ -32,9 +33,10 @@
 		"artifacts": "napi artifacts",
 		"build": "napi build --platform --release --js build.js --dts build.d.ts",
 		"build:debug": "napi build --platform",
-		"prepublishOnly": "napi prepublish -t npm",
+		"prepublishOnly": "napi prepublish -t npm --skip-gh-release",
 		"universal": "napi universal",
-		"version": "napi version"
+		"version": "napi version",
+		"artifacts:bins": "node bin_artifacts.js"
 	},
 	"dependencies": {
 		"esbuild": "^0.25.4"

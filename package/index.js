@@ -61,14 +61,16 @@ const outPath = getArgByFlag("--out", "string");
 const assetsDir = dirPath + "/assets";
 const jsEntry = dirPath + "/index.js";
 
-const newAssets = "./assets";
-const newAssetsStatic = "./assets/assets";
+const temp = "./.luminon";
+const newAssets = temp + "/_assets";
+const newAssetsStatic = newAssets + "/assets";
+const newBundle = newAssets + "/bundle.js";
 
 console.log("Bundling...");
 
 await build({
 	entryPoints: [jsEntry],
-	outfile: "bundle.js",
+	outfile: newBundle,
 	bundle: true,
 	platform: "node",
 	format: "esm",
@@ -88,7 +90,6 @@ if (fs.existsSync(newAssets)) {
 fs.mkdirSync(newAssets, { recursive: true });
 
 // Copy the assets to the new directory
-fs.copyFileSync("bundle.js", `${newAssets}/bundle.js`);
 fs.cpSync(assetsDir, newAssetsStatic, { recursive: true });
 
 zipAssets(binPath, newAssets, outPath);
@@ -98,6 +99,5 @@ console.log("Cleaning up...");
 
 // Delete the assets directory
 fs.rmSync(newAssets, { recursive: true });
-fs.rmSync("./bundle.js");
 
 console.log("Cleaning up complete!");
