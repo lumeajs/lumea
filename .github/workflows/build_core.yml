@@ -51,17 +51,21 @@ jobs:
       - name: Determine build type
         id: build_type
         run: |
-          echo "BUILD_TYPE=${{ github.event.inputs.debug_build == 'true' && 'debug' || 'release' }}" >> $GITHUB_ENV
+          if [[ "${{ github.event.inputs.debug_build }}" == "true" ]]; then
+            echo "type=debug" >> $GITHUB_OUTPUT
+          else
+            echo "type=release" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build with Cargo
-        run: cargo build --${{ env.BUILD_TYPE }} --target ${{ matrix.settings.target }}
+        run: cargo build --${{ steps.build_type.outputs.type }} --target ${{ matrix.settings.target }}
         shell: bash
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: core-${{ matrix.settings.target }}
-          path: ./core/target/${{ matrix.settings.target }}/${{ env.BUILD_TYPE }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          path: ./core/target/${{ matrix.settings.target }}/${{ steps.build_type.outputs.type }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
           if-no-files-found: error
 
   release:
