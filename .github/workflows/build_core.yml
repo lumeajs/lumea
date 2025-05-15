@@ -1,16 +1,13 @@
 name: Build Core
 
+permissions:
+  contents: write
+
 on:
-  workflow_dispatch:
-    inputs:
-      debug_build:
-        description: "Build in debug mode instead of release"
-        required: false
-        default: false
-        type: boolean
   push:
     tags:
-      - v[0-9]+.[0-9]+.[0-9]+
+      - v*.*.*
+      - v*.*.*-debug.*
 
 jobs:
   build_core:
@@ -20,20 +17,18 @@ jobs:
         settings:
           - host: windows-latest
             target: x86_64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@20
+
+    name: stable - ${{ matrix.settings.target }}
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
         working-directory: ./core
-    outputs:
-      tag_name: ${{ steps.get_tag.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        if: ${{ !matrix.settings.docker }}
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
@@ -48,28 +43,30 @@ jobs:
             ./core/target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
 
-      - name: Determine build type
-        id: build_type
+      - name: Detect build type
+        id: build-type
         shell: bash
         run: |
-          if [[ "${{ github.event.inputs.debug_build }}" == "true" ]]; then
-            echo "type=debug" >> $GITHUB_OUTPUT
-            echo "flags=" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF##*/}" == *"-debug."* ]]; then
+            echo "BUILD_TYPE=debug" >> "$GITHUB_OUTPUT"
           else
-            echo "type=release" >> $GITHUB_OUTPUT
-            echo "flags=--release" >> $GITHUB_OUTPUT
+            echo "BUILD_TYPE=release" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build with Cargo
-        run: cargo build ${{ steps.build_type.outputs.flags }} --target ${{ matrix.settings.target }}
-        shell: bash
+      - name: Build
+        run: |
+          BUILD_TYPE="${{ steps.build-type.outputs.BUILD_TYPE }}"
+          if [ "$BUILD_TYPE" = "release" ]; then
+            cargo build --release --target ${{ matrix.target }}
+          else
+            cargo build --target ${{ matrix.target }}
+          fi
 
-      - name: Upload binary artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: core-${{ matrix.settings.target }}
-          path: ./core/target/${{ matrix.settings.target }}/${{ steps.build_type.outputs.type }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
-          if-no-files-found: error
+          name: core-${{ matrix.target }}
+          path: ./core/target/${{ matrix.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/core${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
 
   release:
     needs: build_core
@@ -82,18 +79,6 @@ jobs:
         with:
           path: dist
 
-      - name: Get release tag name
-        id: get_tag
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-          else
-            TAG="v$(date +%m%d-%H%M)"
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Generate changelog since last release
         id: changelog
         run: |
@@ -105,13 +90,22 @@ jobs:
             echo "Initial release" > body.md
           fi
 
+      - name: Check if prerelease
+        id: prerelease
+        run: |
+          TAG="${GITHUB_REF##*/}"
+          if [[ "$TAG" == *"-debug."* ]]; then
+            echo "PRERELEASE=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "PRERELEASE=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get_tag.outputs.tag }}
           body_path: body.md
-          prerelease: ${{ steps.get_tag.outputs.prerelease }}
+          prerelease: ${{ contains(github.ref_name, '-debug.') }}
           files: |
-            dist/core-*/core*
+            dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
