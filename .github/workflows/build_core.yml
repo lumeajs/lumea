@@ -58,16 +58,16 @@ jobs:
         run: |
           BUILD_TYPE="${{ steps.build-type.outputs.BUILD_TYPE }}"
           if [ "$BUILD_TYPE" = "release" ]; then
-            cargo build --release --target ${{ matrix.target }}
+            cargo build --release --target ${{ matrix.settings.target }}
           else
-            cargo build --target ${{ matrix.target }}
+            cargo build --target ${{ matrix.settings.target }}
           fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: core-${{ matrix.target }}
-          path: ./core/target/${{ matrix.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/core${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          name: core-${{ matrix.settings.target }}
+          path: ./core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
 
   release:
     needs: build_core
