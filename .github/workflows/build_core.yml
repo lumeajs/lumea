@@ -66,7 +66,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: core-${{ matrix.settings.target }}
+          name: core-${{ matrix.settings.target }}.${{ steps.build-type.outputs.BUILD_TYPE }}
           path: ./core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
 
   release:
@@ -74,11 +74,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 15
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
+
+      - name: List files
+        run: |
+          find dist
 
       - name: Generate changelog since last release
         id: changelog
@@ -107,6 +113,6 @@ jobs:
           body_path: body.md
           prerelease: ${{ contains(github.ref_name, '-debug.') }}
           files: |
-            dist/*
+            dist/*.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
