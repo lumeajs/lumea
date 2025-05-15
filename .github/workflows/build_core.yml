@@ -2,6 +2,12 @@ name: Build Core
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_build:
+        description: "Build in debug mode instead of release"
+        required: false
+        default: false
+        type: boolean
   push:
     tags:
       - v[0-9]+.[0-9]+.[0-9]+
@@ -13,13 +19,15 @@ jobs:
       matrix:
         settings:
           - host: windows-latest
-            build: cargo build --release --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     defaults:
       run:
         working-directory: ./core
+    outputs:
+      tag_name: ${{ steps.get_tag.outputs.tag }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,15 +48,20 @@ jobs:
             ./core/target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
 
+      - name: Determine build type
+        id: build_type
+        run: |
+          echo "BUILD_TYPE=${{ github.event.inputs.debug_build == 'true' && 'debug' || 'release' }}" >> $GITHUB_ENV
+
       - name: Build with Cargo
-        run: ${{ matrix.settings.build }}
+        run: cargo build --${{ env.BUILD_TYPE }} --target ${{ matrix.settings.target }}
         shell: bash
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: core-${{ matrix.settings.target }}
-          path: ./core/target/${{ matrix.settings.target }}/release/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          path: ./core/target/${{ matrix.settings.target }}/${{ env.BUILD_TYPE }}/core${{ matrix.settings.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
           if-no-files-found: error
 
   release:
@@ -61,6 +74,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
+
+      - name: Get release tag name
+        id: get_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          else
+            TAG="v$(date +%m%d-%H%M)"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate changelog since last release
         id: changelog
@@ -76,7 +101,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
           body_path: body.md
+          prerelease: ${{ steps.get_tag.outputs.prerelease }}
           files: |
             dist/core-*/core*
         env:
