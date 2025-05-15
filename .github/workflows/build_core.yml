@@ -50,6 +50,7 @@ jobs:
 
       - name: Determine build type
         id: build_type
+        shell: bash
         run: |
           if [[ "${{ github.event.inputs.debug_build }}" == "true" ]]; then
             echo "type=debug" >> $GITHUB_OUTPUT
