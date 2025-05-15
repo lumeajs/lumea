@@ -54,6 +54,7 @@ jobs:
           fi
 
       - name: Build
+        shell: bash
         run: |
           BUILD_TYPE="${{ steps.build-type.outputs.BUILD_TYPE }}"
           if [ "$BUILD_TYPE" = "release" ]; then
