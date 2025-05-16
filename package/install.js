@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import http from "node:https";
 
+// prettier-ignore
 import packageJson from "./package.json" with { type: "json" };
 const { version } = packageJson;
 
@@ -51,6 +52,26 @@ downloadArtifact({
 	process.exit(1);
 });
 
+async function downloadFile(url, dest) {
+	const file = fs.createWriteStream(dest);
+
+	return new Promise((resolve, reject) => {
+		http.get(url, (response) => {
+			response.pipe(file);
+			file.on("finish", () => {
+				file.close();
+				resolve();
+			});
+		}).on("error", (err) => {
+			fs.unlink(dest);
+			reject(err);
+		});
+	});
+}
+
+// Test
+// downloadFile("https://placehold.co/600x400.jpg", "test.jpg");
+
 function isInstalled() {
 	try {
 		if (
@@ -91,22 +112,9 @@ function downloadArtifact({ version, artifactName, platform, arch }) {
 		const url = `https://github.com/programordie2/luminon/releases/download/v${version}/${artifactName}-${downloadName}`;
 
         console.log(`Downloading ${url}`);
-		const file = fs.createWriteStream(
-			path.join(dirname, "dist", platformPath),
-		);
-		const request = http.get(url, (response) => {
-			response.pipe(file);
-
-			file.on("finish", () => {
-				file.close();
-				resolve();
-			});
-		});
-
-		request.on("error", (err) => {
-			fs.unlinkSync(path.join(dirname, "dist", platformPath));
-			reject(err);
-		});
+		downloadFile(url, path.join(dirname, "dist", `${artifactName}-${downloadName}`)).then(() => {
+			resolve();
+		})
 	});
 
     // Download the .d.ts file
@@ -114,22 +122,9 @@ function downloadArtifact({ version, artifactName, platform, arch }) {
         const url = `https://github.com/programordie2/luminon/releases/download/v${version}/${artifactName}.d.ts`;
 
         console.log(`Downloading ${url}`);
-        const file = fs.createWriteStream(
-            path.join(dirname, "dist", "build.d.ts"),
-        );
-        const request = http.get(url, (response) => {
-            response.pipe(file);
-
-            file.on("finish", () => {
-                file.close();
-                resolve();
-            });
-        });
-
-        request.on("error", (err) => {
-            fs.unlinkSync(path.join(dirname, "dist", `${artifactName}.d.ts`));
-            reject(err);
-        });
+		downloadFile(url, path.join(dirname, "dist", `${artifactName}.d.ts`)).then(() => {
+			resolve();
+		})
     });
 
     return Promise.all([p1, p2]);

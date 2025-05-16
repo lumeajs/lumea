@@ -1,6 +1,6 @@
 {
 	"name": "@luminon/cli",
-	"version": "0.0.6",
+	"version": "0.0.6-debug.5",
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
