@@ -1,6 +1,6 @@
 {
   "name": "@lumea/cli",
-  "version": "0.0.7-debug.2",
+  "version": "0.0.7-debug.2.1",
   "files": [
     "dist/*",
     "install.js"
