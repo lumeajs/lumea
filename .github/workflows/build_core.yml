@@ -1,5 +1,8 @@
 name: Build Core
 
+env:
+  HUSKY: 0
+
 permissions:
   contents: write
 
@@ -26,6 +29,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check package.json version matches git tag
+        run: |
+          PACKAGE_VERSION=v$(jq -r .version ./package/package.json)
+          GIT_TAG=${GITHUB_REF#refs/tags/}
+
+          if [ "$PACKAGE_VERSION" != "$GIT_TAG" ]; then
+            echo "❌ Version mismatch:"
+            echo "  package.json: $PACKAGE_VERSION"
+            echo "  git tag:      $GIT_TAG"
+            exit 1
+          fi
+
+          echo "✅ Version matches tag: $GIT_TAG"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
