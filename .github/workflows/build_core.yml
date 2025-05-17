@@ -33,7 +33,7 @@ jobs:
       - name: Check package.json version matches git tag
         shell: bash
         run: |
-          PACKAGE_VERSION=v$(jq -r .version ./package/package.json)
+          PACKAGE_VERSION=v$(jq -r .version ../package/package.json)
           GIT_TAG=${GITHUB_REF#refs/tags/}
 
           if [ "$PACKAGE_VERSION" != "$GIT_TAG" ]; then
