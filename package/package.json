@@ -1,52 +1,32 @@
 {
-	"name": "@luminon/cli",
-	"version": "0.0.6-debug.5",
+	"name": "@lumea/cli",
+	"version": "0.0.6-debug.7",
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"index.js",
-		"build.d.ts",
-		"build.js",
-		"force-node-protocol.js"
+		"install.js"
 	],
 	"bin": {
-		"luminon": "./index.js"
+		"lumea": "./index.js"
 	},
 	"type": "module",
-	"napi": {
-		"name": "cli",
-		"triples": {
-			"defaults": false,
-			"additional": [
-				"x86_64-pc-windows-msvc"
-			]
-		}
-	},
-	"license": "MIT",
-	"devDependencies": {
-		"@napi-rs/cli": "^2.18.4"
-	},
+	"license": "Apache-2.0",
 	"engines": {
 		"node": ">= 18"
 	},
 	"scripts": {
-		"postinstall": "node install.js",
-		"artifacts": "napi artifacts",
-		"build": "napi build --platform --release --js build.js --dts build.d.ts",
-		"build:debug": "napi build --platform",
-		"prepublishOnly": "napi prepublish -t npm --skip-gh-release",
-		"universal": "napi universal",
-		"version": "napi version"
+		"postinstall": "node install.js"
 	},
 	"dependencies": {
 		"esbuild": "^0.25.4"
 	},
-	"repository": "https://github.com/programordie2/luminon",
+	"repository": "https://github.com/lumeajs/lumea",
 	"description": "todo",
-	"author": "programORdie",
+	"author": "LumeaJS",
 	"bugs": {
-		"url": "https://github.com/programordie2/luminon/issues"
+		"url": "https://github.com/lumeajs/lumea/issues"
 	},
-	"url": "https://github.com/programORdie2/luminon",
-	"homepage": "https://github.com/programordie2/luminon#readme"
+	"url": "https://github.com/lumeajs/lumea",
+	"homepage": "https://github.com/lumeajs/lumea#readme"
 }

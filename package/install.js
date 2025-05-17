@@ -44,7 +44,7 @@ if (
 // downloads if not cached
 downloadArtifact({
 	version,
-	artifactName: "luminon",
+	artifactName: "lumea",
 	platform,
 	arch,
 }).catch((err) => {
@@ -56,21 +56,27 @@ async function downloadFile(url, dest) {
 	const file = fs.createWriteStream(dest);
 
 	return new Promise((resolve, reject) => {
-		http.get(url, (response) => {
-			response.pipe(file);
-			file.on("finish", () => {
-				file.close();
-				resolve();
-			});
+		const request = http.get(url, (response) => {
+			const redirectUrl = response.headers.location;
+			if (redirectUrl) {
+				console.log(`Redirecting to ${redirectUrl}`);
+				request.abort();
+				downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+			} else {
+				response.pipe(file);
+				file.on("finish", () => {
+					file.close();
+					resolve();
+				});
+			}
 		}).on("error", (err) => {
+			console.error(err.stack);
+
 			fs.unlink(dest);
 			reject(err);
 		});
 	});
 }
-
-// Test
-// downloadFile("https://placehold.co/600x400.jpg", "test.jpg");
 
 function isInstalled() {
 	try {
@@ -92,9 +98,9 @@ function isInstalled() {
 		return false;
 	}
 
-	const luminonPath = path.join(dirname, "dist", platformPath);
+	const lumeaPath = path.join(dirname, "dist", platformPath);
 
-	return fs.existsSync(luminonPath);
+	return fs.existsSync(lumeaPath);
 }
 
 function downloadArtifact({ version, artifactName, platform, arch }) {
@@ -102,24 +108,24 @@ function downloadArtifact({ version, artifactName, platform, arch }) {
 
 	if (!downloadName) {
 		throw new Error(
-			`Luminon builds are not available on platform: ${platform}-${arch}`,
+			`Lumea builds are not available on platform: ${platform}-${arch}`,
 		);
 	}
 
     fs.mkdirSync(path.join(dirname, "dist"), { recursive: true });
 
 	const p1 = new Promise((resolve, reject) => {
-		const url = `https://github.com/programordie2/luminon/releases/download/v${version}/${artifactName}-${downloadName}`;
+		const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}-${downloadName}`;
 
         console.log(`Downloading ${url}`);
-		downloadFile(url, path.join(dirname, "dist", `${artifactName}-${downloadName}`)).then(() => {
+		downloadFile(url, path.join(dirname, "dist", platformPath)).then(() => {
 			resolve();
 		})
 	});
 
     // Download the .d.ts file
     const p2 = new Promise((resolve, reject) => {
-        const url = `https://github.com/programordie2/luminon/releases/download/v${version}/${artifactName}.d.ts`;
+        const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}.d.ts`;
 
         console.log(`Downloading ${url}`);
 		downloadFile(url, path.join(dirname, "dist", `${artifactName}.d.ts`)).then(() => {
@@ -136,16 +142,16 @@ function getPlatformPath() {
 	switch (platform) {
 		case "mas":
 		case "darwin":
-			return "Luminon.app/Contents/MacOS/Luminon";
+			return "Lumea.app/Contents/MacOS/Lumea";
 		case "freebsd":
 		case "openbsd":
 		case "linux":
-			return "luminon";
+			return "lumea";
 		case "win32":
-			return "luminon.exe";
+			return "lumea.exe";
 		default:
 			throw new Error(
-				"Luminon builds are not available on platform: " + platform,
+				"Lumea builds are not available on platform: " + platform,
 			);
 	}
 }

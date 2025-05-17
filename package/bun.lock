@@ -2,7 +2,7 @@
 	"lockfileVersion": 1,
 	"workspaces": {
 		"": {
-			"name": "luminon",
+			"name": "lumea",
 			"dependencies": {
 				"esbuild": "^0.25.4"
 			},
