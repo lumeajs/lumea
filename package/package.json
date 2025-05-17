@@ -1,24 +1,25 @@
 {
 	"name": "@lumea/cli",
 	"version": "0.0.6-debug.7",
-	"main": "index.js",
-	"types": "index.d.ts",
 	"files": [
-		"index.js",
+		"dist/*",
 		"install.js"
 	],
 	"bin": {
-		"lumea": "./index.js"
+		"lumea": "./dist/index.js"
 	},
-	"type": "module",
 	"license": "Apache-2.0",
 	"engines": {
 		"node": ">= 18"
 	},
 	"scripts": {
-		"postinstall": "node install.js"
+		"postinstall": "node install.js",
+		"build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:@lumea/build-helper --loader:.node=file",
+		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
+		"@lumea/build-helper": "^0.1.1",
+		"commander": "^13.1.0",
 		"esbuild": "^0.25.4"
 	},
 	"repository": "https://github.com/lumeajs/lumea",
@@ -28,5 +29,8 @@
 		"url": "https://github.com/lumeajs/lumea/issues"
 	},
 	"url": "https://github.com/lumeajs/lumea",
-	"homepage": "https://github.com/lumeajs/lumea#readme"
+	"homepage": "https://github.com/lumeajs/lumea#readme",
+	"devDependencies": {
+		"@types/node": "18"
+	}
 }
