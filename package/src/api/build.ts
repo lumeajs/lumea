@@ -1,6 +1,6 @@
 import { addAssetsToBin } from "@lumea/build-helper";
 import { build } from "esbuild";
-import { join } from "path";
+import { join, relative } from "path";
 import fs from "fs";
 import { getPlatformPath, readPackageJson } from "../util";
 
@@ -56,9 +56,14 @@ const forceNodeProtocol = {
 	},
 };
 
-function bundleJs(input: string, output: string) {
-	build({
-		entryPoints: [input],
+async function bundleJs(dir: string, file: string, output: string) {
+	await build({
+		alias: {
+			"lumea/main": join(process.cwd(), "dist", "api_main.cjs"),
+		},
+		entryPoints: [join(process.cwd(), dir, file)],
+		absWorkingDir: join(process.cwd(), dir),
+		sourcemap: true,
 		bundle: true,
 		outfile: output,
 		format: "cjs",
@@ -70,7 +75,7 @@ function bundleJs(input: string, output: string) {
 	});
 }
 
-function bundleAssets(dir: string, output: string) {
+async function bundleAssets(dir: string, output: string) {
 	// If output exists, remove it
 	if (fs.existsSync(output)) {
 		fs.rmSync(output, { recursive: true });
@@ -85,20 +90,30 @@ function bundleAssets(dir: string, output: string) {
 	});
 
 	// Get the main file
-	const mainFile = readPackageJson().main || "index.js";
+	const mainFile = readPackageJson(dir).main || "index.js";
 
 	// Bundle the javascript
-	bundleJs(join(dir, mainFile), join(output, "index.js"));
+	await bundleJs(dir, mainFile, join(output, "bundle.js"));
+
+	const map = JSON.parse(
+		fs.readFileSync(join(process.cwd(), dir, output, "bundle.js.map"), "utf8"),
+	);
+	map.sources = map.sources.map((src: string) =>
+		relative(join(process.cwd(), dir), join(process.cwd(), output, src)),
+	);
+
+	fs.writeFileSync(
+		join(process.cwd(), dir, output, "bundle.js.map"),
+		JSON.stringify(map),
+	);
 }
 
-export function createBinary(dir: string, outBin: string) {
-	const tempPath = "./.lumea/tmp";
+export async function createBinary(dir: string, outBin: string) {
+	const tempPath = join(dir, "./.lumea/tmp");
 	const binPath = join("dist", getPlatformPath());
 
-	console.log(binPath, outBin);
-
-	bundleAssets(dir, tempPath);
+	await bundleAssets(dir, tempPath);
 	addAssetsToBin(binPath, tempPath, outBin);
 
-	fs.rmSync(tempPath, { recursive: true });
+	// fs.rmSync(tempPath, { recursive: true });
 }

@@ -20,6 +20,6 @@ export function getPlatformPath() {
 	}
 }
 
-export function readPackageJson() {
-	return JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+export function readPackageJson(path: string) {
+	return JSON.parse(fs.readFileSync(path + "/package.json", "utf-8"));
 }

@@ -3,9 +3,6 @@ name = "core"
 version = "0.0.7-debug.2.1"
 edition = "2024"
 
-[profile.dev]
-incremental = true # Compile your binary in smaller steps.
-
 [profile.release]
 incremental = true
 codegen-units = 16 # 1 is better but slow, Allows LLVM to perform better optimization.
@@ -15,10 +12,12 @@ panic = "abort" # Higher performance by disabling panic handlers.
 strip = true # Ensures debug symbols are removed.
 
 [dependencies]
-windows-sys = { version = "0.52.0", features = ["Win32_UI", "Win32_UI_Shell"] }
+# Fix some known version conflicts
 winapi = { version = "0.3.9", features = ["sysinfoapi"] }
-deno_media_type = "=0.2.6"
 
-rustyscript = { version = "0.11.0", features = ["all_extensions", "node_experimental"] }
-deno_core = "0.323.0"
-zip = "2.6.1"
+# Real dependencies
+rustyscript = { git = "https://github.com/rscarson/rustyscript.git", branch = "master", features = ["all_extensions", "node_experimental"] }
+deno_core = "0.340.0"
+zip = "3.0.0"
+colored = "3.0.0"
+sourcemap = "9.2.1"
