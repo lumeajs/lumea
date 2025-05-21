@@ -1,0 +1,8 @@
+{
+	"entries": [
+		{
+			"filePath": "./main/index.ts",
+			"outFile": "./dist/api_main.d.ts"
+		}
+	]
+}

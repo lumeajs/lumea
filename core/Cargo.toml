@@ -21,3 +21,7 @@ deno_core = "0.340.0"
 zip = "3.0.0"
 colored = "3.0.0"
 sourcemap = "9.2.1"
+
+# Logging
+log = "0.4.20"
+env_logger = "0.11.3"

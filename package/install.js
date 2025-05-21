@@ -6,9 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import http from "node:https";
 
-// prettier-ignore
-import packageJson from "./package.json" with { type: "json" };
-const { version } = packageJson;
+const version = JSON.parse(fs.readFileSync("./package.json", "utf-8")).version;
 
 const platformPath = getPlatformPath();
 
@@ -20,15 +18,12 @@ const dirname = path.dirname(process.argv[1]);
 
 const platformArchToName = {
 	"win32-x64": "x86_64-pc-windows-msvc",
-}
+};
 
 const platform = process.platform;
 const arch = process.arch;
 
-if (
-	platform === "darwin" &&
-	arch === "x64"
-) {
+if (platform === "darwin" && arch === "x64") {
 	// When downloading for macOS ON macOS and we think we need x64 we should
 	// check if we're running under rosetta and download the arm64 version if appropriate
 	try {
@@ -56,25 +51,27 @@ async function downloadFile(url, dest) {
 	const file = fs.createWriteStream(dest);
 
 	return new Promise((resolve, reject) => {
-		const request = http.get(url, (response) => {
-			const redirectUrl = response.headers.location;
-			if (redirectUrl) {
-				console.log(`Redirecting to ${redirectUrl}`);
-				request.abort();
-				downloadFile(redirectUrl, dest).then(resolve).catch(reject);
-			} else {
-				response.pipe(file);
-				file.on("finish", () => {
-					file.close();
-					resolve();
-				});
-			}
-		}).on("error", (err) => {
-			console.error(err.stack);
+		const request = http
+			.get(url, (response) => {
+				const redirectUrl = response.headers.location;
+				if (redirectUrl) {
+					console.log(`Redirecting to ${redirectUrl}`);
+					request.abort();
+					downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+				} else {
+					response.pipe(file);
+					file.on("finish", () => {
+						file.close();
+						resolve();
+					});
+				}
+			})
+			.on("error", (err) => {
+				console.error(err.stack);
 
-			fs.unlink(dest);
-			reject(err);
-		});
+				fs.unlink(dest);
+				reject(err);
+			});
 	});
 }
 
@@ -82,15 +79,8 @@ function isInstalled() {
 	try {
 		if (
 			fs
-				.readFileSync(path.join(dirname, "dist", "version"), "utf-8")
-				.replace(/^v/, "") !== version
-		) {
-			return false;
-		}
-
-		if (
-			fs.readFileSync(path.join(dirname, "path.txt"), "utf-8") !==
-			platformPath
+				.readFileSync(path.join(dirname, "dist", "path.txt"), "utf-8")
+				.replace(/^v/, "") !== `${version}-${platformPath}`
 		) {
 			return false;
 		}
@@ -103,7 +93,7 @@ function isInstalled() {
 	return fs.existsSync(lumeaPath);
 }
 
-function downloadArtifact({ version, artifactName, platform, arch }) {
+async function downloadArtifact({ version, artifactName, platform, arch }) {
 	const downloadName = platformArchToName[`${platform}-${arch}`];
 
 	if (!downloadName) {
@@ -112,28 +102,17 @@ function downloadArtifact({ version, artifactName, platform, arch }) {
 		);
 	}
 
-    fs.mkdirSync(path.join(dirname, "dist"), { recursive: true });
+	fs.mkdirSync(path.join(dirname, "dist"), { recursive: true });
 
-	const p1 = new Promise((resolve, reject) => {
-		const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}-${downloadName}`;
+	const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}-${downloadName}`;
 
-        console.log(`Downloading ${url}`);
-		downloadFile(url, path.join(dirname, "dist", platformPath)).then(() => {
-			resolve();
-		})
-	});
+	console.log(`Downloading ${url}`);
+	await downloadFile(url, path.join(dirname, "dist", platformPath));
 
-    // Download the .d.ts file
-    const p2 = new Promise((resolve, reject) => {
-        const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}.d.ts`;
-
-        console.log(`Downloading ${url}`);
-		downloadFile(url, path.join(dirname, "dist", `${artifactName}.d.ts`)).then(() => {
-			resolve();
-		})
-    });
-
-    return Promise.all([p1, p2]);
+	fs.writeFileSync(
+		path.join(dirname, "dist", "path.txt"),
+		`v${version}-${platformPath}`,
+	);
 }
 
 function getPlatformPath() {

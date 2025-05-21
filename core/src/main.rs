@@ -1,11 +1,15 @@
-use deno_core::error::JsStackFrame;
-use rustyscript::deno_core::{error::JsError, extension, op2};
+use deno_core::error::{JsError, JsStackFrame};
+use rustyscript::deno_core::{extension, op2};
 use rustyscript::{Module, Runtime, RuntimeOptions};
 
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 
 use colored::*;
+
+use env_logger;
+use log::{debug, error, info, warn};
+
 use sourcemap::SourceMap;
 
 fn remap_stack_frame(
@@ -95,6 +99,7 @@ fn load_embedded_assets() -> Vec<u8> {
     exe.read_exact(&mut magic).unwrap();
 
     if &magic != b"ASST" {
+        debug!("Magic number isn't correct. Magic number: {:?}", magic);
         panic!("Can't find embedded assets, make sure you use the build script.");
     }
 
@@ -102,7 +107,7 @@ fn load_embedded_assets() -> Vec<u8> {
     exe.read_exact(&mut size_bytes).unwrap();
     let zip_size = u64::from_le_bytes(size_bytes);
 
-    println!("Zip size: {}", zip_size);
+    debug!("Zip size: {}", zip_size);
 
     // 3) seek to start of ZIP
     exe.seek(SeekFrom::End(-((4 + 8) as i64 + zip_size as i64)))
@@ -115,41 +120,61 @@ fn load_embedded_assets() -> Vec<u8> {
 }
 
 fn main() {
+    // Initialize logger
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+        .format(|buf, record| writeln!(buf, "{}", record.args().to_string()))
+        .init();
+    debug!("Application starting...");
+
+    // Replace panic hook to log errors with context
     std::panic::set_hook(Box::new(|panic_info| {
         if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
-            println!("{s:?}");
+            error!("{} ({}:{})", s, file!(), line!());
         } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
-            println!("{s:?}");
+            error!("{} ({}:{})", s, file!(), line!());
         } else {
-            println!("{:?}", panic_info);
+            error!("{:?} ({}:{})", panic_info, file!(), line!());
         }
     }));
 
     let assets_zip = load_embedded_assets();
     let reader = std::io::Cursor::new(assets_zip);
-    let mut zip = zip::ZipArchive::new(reader).unwrap();
+    let mut zip = zip::ZipArchive::new(reader).unwrap_or_else(|e| {
+        panic!("Failed to open ZIP archive: {}", e);
+    });
 
     let mut js = String::new();
     let mut smap_data = String::new();
     for i in 0..zip.len() {
         let mut file = zip.by_index(i).unwrap();
-        // TODO: remove
-        println!("file {} has {} bytes", file.name(), file.size());
+        debug!(
+            "Processing file '{}' with {} bytes",
+            file.name(),
+            file.size()
+        );
 
         if file.name() == "bundle.js" {
-            println!("Found bundle.js");
-            file.read_to_string(&mut js).unwrap();
-            println!("{}", js);
+            debug!("Found bundle.js");
+            file.read_to_string(&mut js).unwrap_or_else(|e| {
+                panic!("Failed to read bundle.js: {}", e);
+            });
         }
 
         if file.name() == "bundle.js.map" {
-            println!("Found bundle.js.map");
-            file.read_to_string(&mut smap_data).unwrap();
-            println!("{}", smap_data);
+            debug!("Found bundle.js.map");
+            file.read_to_string(&mut smap_data).unwrap_or_else(|e| {
+                panic!("Failed to read bundle.js.map: {}", e);
+            });
         }
     }
 
-    let smap = SourceMap::from_slice(smap_data.as_bytes()).unwrap();
+    if js.trim().is_empty() || smap_data.trim().is_empty() {
+        warn!("One or more critical assets are empty",);
+    }
+
+    let smap = SourceMap::from_slice(smap_data.as_bytes()).unwrap_or_else(|e| {
+        panic!("Failed to parse source map: {}", e);
+    });
 
     #[op2(fast)]
     fn op_add_example(a: i32, b: i32) -> i32 {
@@ -163,20 +188,21 @@ fn main() {
         extensions: vec![example_extension::init_ops_and_esm()],
         ..Default::default()
     })
-    .unwrap();
+    .unwrap_or_else(|e| {
+        panic!("Failed to JavaScript create runtime: {}", e,);
+    });
 
-    println!("Loading module...");
-
-    match runtime.load_module(&module) {
-        Ok(_) => {}
-        Err(err) => {
-            if let rustyscript::Error::JsError(js_err) = &err {
-                panic!("{}", format_js_error_as_node(js_err, &smap));
-            } else {
-                panic!("Non-JS error: {}", err);
+    info!("Loading module...");
+    runtime
+        .load_module(&module)
+        .unwrap_or_else(|err| match &err {
+            rustyscript::Error::JsError(js_err) => {
+                panic!("{}", format_js_error_as_node(js_err, &smap),);
             }
-        }
-    }
+            _ => {
+                panic!("Non-JS error: {} ({}:{})", err, file!(), line!());
+            }
+        });
 
-    println!("Done!");
+    debug!("Module loaded successfully.");
 }

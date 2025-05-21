@@ -1,8 +1,11 @@
 {
 	"name": "@lumea/cli",
 	"version": "0.0.7-debug.2.1",
+	"types": "dist/types.d.ts",
 	"files": [
+		"dist/types.d.ts",
 		"dist/index.js",
+		"dist/api_*",
 		"install.js"
 	],
 	"bin": {
@@ -14,8 +17,7 @@
 	},
 	"scripts": {
 		"postinstall": "node install.js",
-		"build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:@lumea/build-helper --loader:.node=file",
-		"prepublishOnly": "npm run build"
+		"build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:@lumea/build-helper --loader:.node=file"
 	},
 	"dependencies": {
 		"@lumea/build-helper": "^0.1.1",
