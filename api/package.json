@@ -1,21 +1,21 @@
 {
-	"name": "api",
-	"private": true,
-	"type": "module",
-	"version": "0.0.0",
-	"scripts": {
-		"build:api": "node scripts/build.js",
-		"build:types": "dts-bundle-generator --config dts-bundle-config.json",
-		"postbuild:types": "node scripts/post_build_types.js",
-		"build": "npm run build:api && npm run build:types"
-	},
-	"devDependencies": {
-		"@types/node": "^20.4.9",
-		"dts-bundle-generator": "^9.5.1",
-		"esbuild": "^0.25.4",
-		"typescript": "^5.8.3"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
-	}
+  "name": "api",
+  "private": true,
+  "type": "module",
+  "version": "0.0.8-debug.0",
+  "scripts": {
+    "build:api": "node scripts/build.js",
+    "build:types": "dts-bundle-generator --config dts-bundle-config.json",
+    "postbuild:types": "node scripts/post_build_types.js",
+    "build": "npm run build:api && npm run build:types"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.9",
+    "dts-bundle-generator": "^9.5.1",
+    "esbuild": "^0.25.4",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
 }
