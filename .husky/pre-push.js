@@ -2,7 +2,8 @@ const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-const packagePath = path.join(__dirname, "..", "package", "package.json");
+const packagePath1 = path.join(__dirname, "..", "package", "package.json");
+const packagePath2 = path.join(__dirname, "..", "api", "package.json");
 const cargoPath = path.join(__dirname, "..", "core", "Cargo.toml");
 
 function getGitTag() {
@@ -13,7 +14,7 @@ function getGitTag() {
 	}
 }
 
-function getPackageVersion() {
+function getPackageVersion(packagePath) {
 	const json = JSON.parse(fs.readFileSync(packagePath, "utf8"));
 	return `v${json.version}`;
 }
@@ -30,7 +31,8 @@ function getCargoVersion() {
 }
 
 const gitTag = getGitTag();
-const pkgVersion = getPackageVersion();
+const pkgVersionApi = getPackageVersion(packagePath2);
+const pkgVersionPackage = getPackageVersion(packagePath1);
 const cargoVersion = getCargoVersion();
 
 if (!gitTag) {
@@ -39,12 +41,15 @@ if (!gitTag) {
 }
 
 if (
-	gitTag !== pkgVersion ||
+	gitTag !== pkgVersionApi ||
+	gitTag !== pkgVersionPackage ||
 	gitTag !== cargoVersion ||
-	pkgVersion !== cargoVersion
+	pkgVersionApi !== cargoVersion ||
+	pkgVersionPackage !== cargoVersion
 ) {
 	console.error(`❌ Version mismatch:
-  package.json: ${pkgVersion}
+  package/package.json: ${pkgVersionPackage}
+  api/package.json:     ${pkgVersionApi}
   Cargo.toml:   ${cargoVersion}
   git tag:      ${gitTag}`);
 	process.exit(1);

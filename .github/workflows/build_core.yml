@@ -94,6 +94,61 @@ jobs:
           path: ./core/dist/lumea-${{ matrix.settings.target }}
           if-no-files-found: error
 
+  build_api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: Build api
+        shell: bash
+        run: |
+          cd api
+          npm run build
+
+      - name: Log dist
+        run: |
+          cd api
+          find dist
+
+      - name: Copy dist
+        shell: bash
+        run: |
+          cp -r api/dist/* package/dist
+
+      - name: Build package
+        shell: bash
+        run: |
+          cd package
+          npm ci
+          npm run build
+
+      - name: List dist
+        run: |
+          find package/dist
+
+      - name: Publish package
+        shell: bash
+        run: |
+          cd package
+          npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   release:
     needs: build_core
     runs-on: ubuntu-latest
