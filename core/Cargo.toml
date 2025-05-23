@@ -1,6 +1,6 @@
 [package]
 name = "core"
-version = "0.0.8-debug.1"
+version = "0.0.8-debug.2"
 edition = "2024"
 
 [profile.release]

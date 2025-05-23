@@ -130,6 +130,7 @@ jobs:
         run: |
           mkdir package/dist
           cp -r api/dist/* package/dist
+          find package/dist
 
       - name: Build package
         shell: bash
