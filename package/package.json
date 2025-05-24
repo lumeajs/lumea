@@ -1,6 +1,6 @@
 {
   "name": "lumea",
-  "version": "0.0.8-debug.6",
+  "version": "0.0.8-debug.6.1",
   "types": "dist/types.d.ts",
   "files": [
     "dist/types.d.ts",
