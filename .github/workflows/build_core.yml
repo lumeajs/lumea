@@ -165,7 +165,11 @@ jobs:
           cd package
           npm ci --ignore-scripts
           npm install esbuild
-          npm run release:prebuild
+
+          TAG=$(git describe --tags --exact-match 2>/dev/null || git describe --tags --abbrev=0)
+          echo "Tag: $TAG"
+
+          node scripts/prebuild.js $TAG
           npm run build
 
       - name: List dist
