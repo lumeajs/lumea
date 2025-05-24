@@ -136,7 +136,7 @@ jobs:
         shell: bash
         run: |
           cd package
-          npm ci
+          npm ci --ignore-scripts
           npm run build
 
       - name: List dist
