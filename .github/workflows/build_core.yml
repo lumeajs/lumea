@@ -20,10 +20,16 @@ jobs:
       core_changed: ${{ steps.filter.outputs.core }}
     steps:
       - uses: actions/checkout@v4
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          echo "tag=$(git describe --tags --abbrev=0 HEAD^)" >> $GITHUB_OUTPUT
+
       - name: Filter core changes
         id: filter
         uses: dorny/paths-filter@v2
         with:
+          base: ${{ steps.prev_tag.outputs.tag }}
           filters: |
             core:
               - 'core/**'
@@ -177,6 +183,7 @@ jobs:
           find package/dist
 
       - name: Publish package
+        id: publish
         shell: bash
         run: |
           cd package
