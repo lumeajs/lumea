@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import os from "node:os";
 import { program } from "commander";
 import { readPackageJson } from "./util";

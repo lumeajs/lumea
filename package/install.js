@@ -10,7 +10,10 @@ const version = JSON.parse(fs.readFileSync("./package.json", "utf-8")).version;
 
 const platformPath = getPlatformPath();
 
+console.log("Installing Lumea v" + version, "at", platformPath);
+
 if (isInstalled()) {
+	console.log("✅ Lumea is already installed at", platformPath);
 	process.exit(0);
 }
 
