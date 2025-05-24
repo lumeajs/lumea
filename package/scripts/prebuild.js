@@ -10,18 +10,20 @@ function writePackageVersion(version) {
 	fs.writeFileSync(packagePath, data.replace(/CI_INPUT_VERSION/g, version));
 }
 
-function getCargoVersion() {
-	const toml = fs.readFileSync(cargoPath, "utf8");
-	const versionMatch = toml.match(/version = "([^"]+)"/);
-	if (!versionMatch) {
-		throw new Error("Could not find version in Cargo.toml");
+function getGitTag() {
+	try {
+		return execSync("git describe --tags --abbrev=0").toString().trim();
+	} catch {
+		return null;
 	}
-	const cargoVersion = versionMatch[1];
-
-	return `v${cargoVersion}`;
 }
 
-const version = getCargoVersion();
+const version = getGitTag();
+
+if (!version) {
+	console.error("❌ Not pushing from a tag. Please tag your commit.");
+	process.exit(1);
+}
 
 writePackageVersion(version);
 
