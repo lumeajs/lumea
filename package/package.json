@@ -35,5 +35,5 @@
   "devDependencies": {
     "@types/node": "^20"
   },
-  "version": "0.0.9-debug.0"
+  "version": "0.0.9-debug.1"
 }
