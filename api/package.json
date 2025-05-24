@@ -2,7 +2,7 @@
   "name": "api",
   "private": true,
   "type": "module",
-  "version": "0.0.8-debug.2",
+  "version": "0.0.8-debug.3",
   "scripts": {
     "build:api": "node scripts/build.js",
     "build:types": "dts-bundle-generator --config dts-bundle-config.json",

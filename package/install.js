@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import childProcess from "node:child_process";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import http from "node:https";
+const childProcess = require("child_process");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const http = require("https");
 
 const version = JSON.parse(fs.readFileSync("./package.json", "utf-8")).version;
 
