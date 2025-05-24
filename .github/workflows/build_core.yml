@@ -13,7 +13,24 @@ on:
       - v*.*.*-debug.*
 
 jobs:
+  # New job to filter if 'core' folder was changed
+  filter_core:
+    runs-on: ubuntu-latest
+    outputs:
+      core_changed: ${{ steps.filter.outputs.core }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Filter core changes
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            core:
+              - 'core/**'
+
   build_core:
+    needs: [filter_core]
+    if: ${{ needs.filter_core.outputs.core_changed == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,37 +46,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Check package.json version matches git tag
-        shell: bash
-        run: |
-          PACKAGE_VERSION=v$(jq -r .version ../package/package.json)
-          GIT_TAG=${GITHUB_REF#refs/tags/}
-
-          if [ "$PACKAGE_VERSION" != "$GIT_TAG" ]; then
-            echo "❌ Version mismatch:"
-            echo "  package.json: $PACKAGE_VERSION"
-            echo "  git tag:      $GIT_TAG"
-            exit 1
-          fi
-
-          echo "✅ Version matches tag: $GIT_TAG"
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
-
-      - name: Cache Cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./core/target/
-          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
 
       - name: Detect build type
         id: build-type
@@ -71,6 +62,30 @@ jobs:
             echo "BUILD_TYPE=release" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./core/target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}-${{ hashFiles('core/Cargo.lock') }}-${{ steps.build-type.outputs.BUILD_TYPE }}
+          restore-keys: |
+            ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}-
+
+      - name: Log Cargo and target folder sizes
+        shell: bash
+        run: |
+          echo "Cargo registry index:"
+          du -sh ~/.cargo/registry/index/ || true
+          echo "Cargo registry cache:"
+          du -sh ~/.cargo/registry/cache/ || true
+          echo "Cargo git db:"
+          du -sh ~/.cargo/git/db/ || true
+          echo "core/target:"
+          du -sh ./core/target/ || true
+
       - name: Build
         shell: bash
         run: |
@@ -80,6 +95,18 @@ jobs:
           else
             cargo build --target ${{ matrix.settings.target }}
           fi
+
+      - name: Log Cargo and target folder sizes after build
+        shell: bash
+        run: |
+          echo "Cargo registry index:"
+          du -sh ~/.cargo/registry/index/ || true
+          echo "Cargo registry cache:"
+          du -sh ~/.cargo/registry/cache/ || true
+          echo "Cargo git db:"
+          du -sh ~/.cargo/git/db/ || true
+          echo "core/target:"
+          du -sh ./core/target/ || true
 
       - name: Rename and move binary
         shell: bash
@@ -138,6 +165,7 @@ jobs:
           cd package
           npm ci --ignore-scripts
           npm install esbuild
+          npm run release:prebuild
           npm run build
 
       - name: List dist
@@ -152,7 +180,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  release:
+  release_core:
     needs: build_core
     runs-on: ubuntu-latest
     steps:

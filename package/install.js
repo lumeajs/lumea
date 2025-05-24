@@ -6,7 +6,8 @@ const os = require("os");
 const path = require("path");
 const http = require("https");
 
-const version = JSON.parse(fs.readFileSync("./package.json", "utf-8")).version;
+// This will be replaced with the version of the latest release
+const version = "CI_INPUT_VERSION";
 
 const platformPath = getPlatformPath();
 

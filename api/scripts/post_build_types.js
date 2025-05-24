@@ -6,7 +6,8 @@ let output = "";
 
 for (const module of modules) {
 	const path = `dist/api_${module}.d.ts`;
-	const content = fs.readFileSync(path, "utf-8");
+	let content = fs.readFileSync(path, "utf-8");
+	content = content.replace("export declare", "export"); // Remove export declare
 	const wrapped = `declare module "lumea/${module}" {\n${content}\n}`;
 	output += `${wrapped}\n\n`;
 

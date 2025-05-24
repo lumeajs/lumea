@@ -2,7 +2,6 @@
   "name": "api",
   "private": true,
   "type": "module",
-  "version": "0.0.8-debug.6.1",
   "scripts": {
     "build:api": "node scripts/build.js",
     "build:types": "dts-bundle-generator --config dts-bundle-config.json",
@@ -17,5 +16,6 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "version": "0.0.9-debug.0"
 }

@@ -1,6 +1,5 @@
 {
   "name": "lumea",
-  "version": "0.0.8-debug.6.1",
   "types": "dist/types.d.ts",
   "files": [
     "dist/types.d.ts",
@@ -13,11 +12,12 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">= 18"
+    "node": ">= 20.0.0"
   },
   "scripts": {
     "postinstall": "node install.js",
-    "build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:@lumea/build-helper --loader:.node=file"
+    "release:prebuild": "node scripts/prebuild.js",
+    "build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:commander --external:@lumea/build-helper --loader:.node=file"
   },
   "dependencies": {
     "@lumea/build-helper": "^0.1.1",
@@ -33,6 +33,7 @@
   "url": "https://github.com/lumeajs/lumea",
   "homepage": "https://github.com/lumeajs/lumea#readme",
   "devDependencies": {
-    "@types/node": "18"
-  }
+    "@types/node": "^20"
+  },
+  "version": "0.0.9-debug.0"
 }
