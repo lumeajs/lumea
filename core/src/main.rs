@@ -156,6 +156,7 @@ fn main() {
 
         if file.name() == "bundle.js" {
             debug!("Found bundle.js");
+
             file.read_to_string(&mut js).unwrap_or_else(|e| {
                 panic!("Failed to read bundle.js: {}", e);
             });
@@ -163,6 +164,7 @@ fn main() {
 
         if file.name() == "bundle.js.map" {
             debug!("Found bundle.js.map");
+            
             file.read_to_string(&mut smap_data).unwrap_or_else(|e| {
                 panic!("Failed to read bundle.js.map: {}", e);
             });
