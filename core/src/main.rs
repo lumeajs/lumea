@@ -124,6 +124,7 @@ fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| writeln!(buf, "{}", record.args().to_string()))
         .init();
+
     debug!("Application starting...");
 
     // Replace panic hook to log errors with context

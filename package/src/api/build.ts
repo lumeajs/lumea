@@ -59,7 +59,7 @@ const forceNodeProtocol = {
 async function bundleJs(dir: string, file: string, output: string) {
 	await build({
 		alias: {
-			"lumea/main": join(process.cwd(), "dist", "api_main.cjs"),
+			"lumea/main": join(__dirname, "api_main.cjs"),
 		},
 		entryPoints: [join(process.cwd(), dir, file)],
 		absWorkingDir: join(process.cwd(), dir),
@@ -110,10 +110,10 @@ async function bundleAssets(dir: string, output: string) {
 
 export async function createBinary(dir: string, outBin: string) {
 	const tempPath = join(dir, "./.lumea/tmp");
-	const binPath = join("dist", getPlatformPath());
+	const binPath = join(__dirname, getPlatformPath());
 
 	await bundleAssets(dir, tempPath);
 	addAssetsToBin(binPath, tempPath, outBin);
 
-	// fs.rmSync(tempPath, { recursive: true });
+	fs.rmSync(tempPath, { recursive: true });
 }

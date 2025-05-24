@@ -16,8 +16,6 @@ if (!version) {
 	process.exit(1);
 }
 
-console.log(version, process.env);
-
 writePackageVersion(version);
 
 console.log("✅ Package version set to", version);

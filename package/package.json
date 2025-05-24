@@ -1,38 +1,38 @@
 {
-	"name": "lumea",
-	"types": "dist/types.d.ts",
-	"files": [
-		"dist/types.d.ts",
-		"dist/index.js",
-		"dist/api_*",
-		"install.js"
-	],
-	"bin": {
-		"lumea": "./dist/index.js"
-	},
-	"license": "Apache-2.0",
-	"engines": {
-		"node": ">= 20.0.0"
-	},
-	"scripts": {
-		"postinstall": "node install.js",
-		"build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:commander --external:@lumea/build-helper --loader:.node=file"
-	},
-	"dependencies": {
-		"@lumea/build-helper": "^0.1.1",
-		"commander": "^13.1.0",
-		"esbuild": "^0.25.4"
-	},
-	"repository": "https://github.com/lumeajs/lumea",
-	"description": "todo",
-	"author": "LumeaJS",
-	"bugs": {
-		"url": "https://github.com/lumeajs/lumea/issues"
-	},
-	"url": "https://github.com/lumeajs/lumea",
-	"homepage": "https://github.com/lumeajs/lumea#readme",
-	"devDependencies": {
-		"@types/node": "^20"
-	},
-	"version": "0.0.9-debug.1"
+  "name": "lumea",
+  "types": "dist/types.d.ts",
+  "files": [
+    "dist/types.d.ts",
+    "dist/index.js",
+    "dist/api_*",
+    "install.js"
+  ],
+  "bin": {
+    "lumea": "./dist/index.js"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">= 20.0.0"
+  },
+  "scripts": {
+    "postinstall": "node install.js",
+    "build": "esbuild src/index.ts --bundle --target=es2022 --platform=node --outfile=dist/index.js --format=cjs --external:node:* --external:esbuild --external:commander --external:@lumea/build-helper --loader:.node=file"
+  },
+  "dependencies": {
+    "@lumea/build-helper": "^0.1.1",
+    "commander": "^13.1.0",
+    "esbuild": "^0.25.4"
+  },
+  "repository": "https://github.com/lumeajs/lumea",
+  "description": "todo",
+  "author": "LumeaJS",
+  "bugs": {
+    "url": "https://github.com/lumeajs/lumea/issues"
+  },
+  "url": "https://github.com/lumeajs/lumea",
+  "homepage": "https://github.com/lumeajs/lumea#readme",
+  "devDependencies": {
+    "@types/node": "^20"
+  },
+  "version": "0.0.9-debug.3"
 }

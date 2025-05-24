@@ -4,8 +4,9 @@ import os from "node:os";
 import { program } from "commander";
 import { readPackageJson } from "./util";
 import { createBinary } from "./api/build";
+import { join } from "node:path";
 
-const version = readPackageJson(".").version;
+const version = readPackageJson(join(__dirname, "..")).version;
 
 program.version(version).description("Lumea CLI");
 
