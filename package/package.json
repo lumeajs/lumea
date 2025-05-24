@@ -1,6 +1,6 @@
 {
   "name": "@lumea/cli",
-  "version": "0.0.8-debug.4",
+  "version": "0.0.8-debug.5",
   "types": "dist/types.d.ts",
   "files": [
     "dist/types.d.ts",
