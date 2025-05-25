@@ -1,7 +1,7 @@
 use tao::{
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoopBuilder, EventLoopWindowTarget},
-    window::{Window, WindowBuilder},
+    event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy, EventLoopWindowTarget},
+    window::{Window, WindowBuilder, WindowId},
 };
 
 use wry::{WebView, WebViewBuilder};
@@ -10,9 +10,12 @@ use deno_core::error::{JsError, JsStackFrame};
 use rustyscript::deno_core::{extension, op2};
 use rustyscript::{Module, Runtime, RuntimeOptions};
 
-use std::fs::File;
-use std::io::{Read, Seek, SeekFrom, Write};
-use std::time::SystemTime;
+use std::{collections::HashMap, time::SystemTime};
+use std::{fs::File, sync::OnceLock};
+use std::{
+    io::{Read, Seek, SeekFrom, Write},
+    sync::mpsc,
+};
 
 use colored::*;
 
@@ -20,6 +23,14 @@ use env_logger;
 use log::{debug, error, info, warn};
 
 use sourcemap::SourceMap;
+
+static PROXY: OnceLock<EventLoopProxy<AppEvent>> = OnceLock::new();
+
+#[derive(Debug)]
+enum AppEvent {
+    Add(i32, i32, mpsc::Sender<i32>),
+    NewWindow,
+}
 
 fn remap_stack_frame(
     frame: &JsStackFrame,
@@ -221,13 +232,31 @@ fn main() {
         start.elapsed().unwrap().as_millis()
     );
 
+    let event_loop = EventLoopBuilder::with_user_event().build();
+    let proxy = event_loop.create_proxy();
+
+    PROXY.set(proxy).unwrap();
+
     std::thread::spawn(move || {
         #[op2(fast)]
         fn op_add_example(a: i32, b: i32) -> i32 {
-            a + b
+            if let Some(proxy) = PROXY.get() {
+                let (tx, rx) = mpsc::channel();
+                proxy.send_event(AppEvent::Add(a, b, tx)).unwrap();
+                rx.recv().unwrap_or(0)
+            } else {
+                0
+            }
         }
 
-        extension!(example_extension, ops = [op_add_example]);
+        #[op2(fast)]
+        fn new_window() {
+            if let Some(proxy) = PROXY.get() {
+                proxy.send_event(AppEvent::NewWindow).unwrap();
+            }
+        }
+
+        extension!(example_extension, ops = [op_add_example, new_window]);
 
         info!(
             "Extension loaded at {}",
@@ -274,14 +303,28 @@ fn main() {
         start.elapsed().unwrap().as_millis()
     );
 
-    let event_loop = EventLoopBuilder::with_user_event().build();
-    let (_window, _webview) = create_new_window(&event_loop);
+    let mut windows: HashMap<WindowId, Window> = HashMap::new();
+    let mut webviews: HashMap<WindowId, WebView> = HashMap::new();
 
     // Winit Event Loop
-    event_loop.run(move |event, _event_loop, control_flow| {
+    event_loop.run(move |event, event_loop, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
+            Event::UserEvent(AppEvent::Add(a, b, tx)) => {
+                let _ = tx.send(a + b);
+            }
+            Event::UserEvent(AppEvent::NewWindow) => {
+                let window = create_new_window(event_loop);
+                let webview = create_new_webview(&window);
+
+                // TODO: We really shouldn't be using the windowId for the webview
+                // But I have no idea how to create random numbers in rust
+                let id = window.id();
+
+                windows.insert(id, window);
+                webviews.insert(id, webview);
+            }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
@@ -294,9 +337,12 @@ fn main() {
     });
 }
 
-fn create_new_window(event_loop: &EventLoopWindowTarget<()>) -> (Window, WebView) {
+fn create_new_window(event_loop: &EventLoopWindowTarget<AppEvent>) -> Window {
     let window = WindowBuilder::new().build(event_loop).unwrap();
+    window
+}
 
+fn create_new_webview(window: &Window) -> WebView {
     let builder = WebViewBuilder::new()
         .with_devtools(true) // TODO: Make this configurable
         .with_on_page_load_handler(move |event, _url| match event {
@@ -323,5 +369,5 @@ fn create_new_window(event_loop: &EventLoopWindowTarget<()>) -> (Window, WebView
         builder.build_gtk(vbox)?
     };
 
-    (window, webview)
+    webview
 }

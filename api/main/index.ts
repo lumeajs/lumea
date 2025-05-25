@@ -1,4 +1,4 @@
-import { op_add_example } from "./funcs";
+import { op_add_example, new_window } from "./funcs";
 import { uselessFunction } from "./util";
 
 export function hello() {
@@ -9,4 +9,8 @@ export function hello() {
 
 export function add(a: number, b: number) {
 	return op_add_example(a, b);
+}
+
+export function newWindow() {
+	new_window();
 }
