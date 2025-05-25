@@ -1,3 +1,11 @@
+use tao::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoopBuilder, EventLoopWindowTarget},
+    window::{Window, WindowBuilder},
+};
+
+use wry::{WebView, WebViewBuilder};
+
 use deno_core::error::{JsError, JsStackFrame};
 use rustyscript::deno_core::{extension, op2};
 use rustyscript::{Module, Runtime, RuntimeOptions};
@@ -24,11 +32,7 @@ fn remap_stack_frame(
         let file = token.get_source().unwrap_or("unknown").to_string();
         let orig_line = token.get_src_line() + 1;
         let orig_col = token.get_src_col() + 1;
-        let function_name = frame
-            .function_name
-            .as_ref()
-            .or_else(|| frame.method_name.as_ref())
-            .map_or("<anonymous>".to_string(), |name| name.clone());
+        let function_name = token.get_name().unwrap_or("<anonymous>").to_string();
 
         // Read the line that contains the token
         let line_contents = token
@@ -217,48 +221,107 @@ fn main() {
         start.elapsed().unwrap().as_millis()
     );
 
-    #[op2(fast)]
-    fn op_add_example(a: i32, b: i32) -> i32 {
-        a + b
-    }
+    std::thread::spawn(move || {
+        #[op2(fast)]
+        fn op_add_example(a: i32, b: i32) -> i32 {
+            a + b
+        }
 
-    extension!(example_extension, ops = [op_add_example]);
+        extension!(example_extension, ops = [op_add_example]);
 
-    info!(
-        "Extension loaded at {}",
-        start.elapsed().unwrap().as_millis()
-    );
+        info!(
+            "Extension loaded at {}",
+            start.elapsed().unwrap().as_millis()
+        );
 
-    let module = Module::new("index.js", js);
+        let module = Module::new("index.js", js);
 
-    info!("Module created at {}", start.elapsed().unwrap().as_millis());
+        info!("Module created at {}", start.elapsed().unwrap().as_millis());
 
-    let mut runtime = Runtime::new(RuntimeOptions {
-        extensions: vec![example_extension::init_ops_and_esm()],
-        ..Default::default()
-    })
-    .unwrap_or_else(|e| {
-        panic!("Failed to JavaScript create runtime: {}", e);
+        let mut runtime = Runtime::new(RuntimeOptions {
+            extensions: vec![example_extension::init_ops_and_esm()],
+            ..Default::default()
+        })
+        .unwrap_or_else(|e| {
+            panic!("Failed to JavaScript create runtime: {}", e);
+        });
+
+        info!(
+            "Runtime created at {}",
+            start.elapsed().unwrap().as_millis()
+        );
+
+        debug!("Loading module...");
+        runtime
+            .load_module(&module)
+            .unwrap_or_else(|err| match &err {
+                rustyscript::Error::JsError(js_err) => {
+                    eprintln!("{}", format_js_error_as_node(js_err, &smap));
+                    std::process::exit(1);
+                }
+                _ => {
+                    panic!("Non-JS error: {} ({}:{})", err, file!(), line!());
+                }
+            });
+
+        info!("Module loaded at {}", start.elapsed().unwrap().as_millis());
+
+        debug!("Module loaded successfully.");
     });
 
     info!(
-        "Runtime created at {}",
+        "Application started at {}",
         start.elapsed().unwrap().as_millis()
     );
 
-    debug!("Loading module...");
-    runtime
-        .load_module(&module)
-        .unwrap_or_else(|err| match &err {
-            rustyscript::Error::JsError(js_err) => {
-                panic!("{}", format_js_error_as_node(js_err, &smap));
+    let event_loop = EventLoopBuilder::with_user_event().build();
+    let (_window, _webview) = create_new_window(&event_loop);
+
+    // Winit Event Loop
+    event_loop.run(move |event, _event_loop, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                *control_flow = ControlFlow::Exit;
             }
-            _ => {
-                panic!("Non-JS error: {} ({}:{})", err, file!(), line!());
-            }
+
+            _ => (),
+        }
+    });
+}
+
+fn create_new_window(event_loop: &EventLoopWindowTarget<()>) -> (Window, WebView) {
+    let window = WindowBuilder::new().build(event_loop).unwrap();
+
+    let builder = WebViewBuilder::new()
+        .with_devtools(true) // TODO: Make this configurable
+        .with_on_page_load_handler(move |event, _url| match event {
+            wry::PageLoadEvent::Started => {}  // TODO,
+            wry::PageLoadEvent::Finished => {} // TODO
         });
+    #[cfg(any(
+        target_os = "windows",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "android"
+    ))]
+    let webview = builder.build(&window).unwrap();
+    #[cfg(not(any(
+        target_os = "windows",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "android"
+    )))]
+    let webview = {
+        use tao::platform::unix::WindowExtUnix;
+        use wry::WebViewBuilderExtUnix;
+        let vbox = window.default_vbox().unwrap();
+        builder.build_gtk(vbox)?
+    };
 
-    info!("Module loaded at {}", start.elapsed().unwrap().as_millis());
-
-    debug!("Module loaded successfully.");
+    (window, webview)
 }
