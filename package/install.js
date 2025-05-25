@@ -11,7 +11,7 @@ const version = "CI_INPUT_VERSION";
 
 const platformPath = getPlatformPath();
 
-console.log("Installing Lumea v" + version, "at", platformPath);
+console.log("Installing Lumea", version, "at", platformPath);
 
 if (isInstalled()) {
 	console.log("✅ Lumea is already installed at", platformPath);
@@ -108,7 +108,7 @@ async function downloadArtifact({ version, artifactName, platform, arch }) {
 
 	fs.mkdirSync(path.join(dirname, "dist"), { recursive: true });
 
-	const url = `https://github.com/lumeajs/lumea/releases/download/v${version}/${artifactName}-${downloadName}`;
+	const url = `https://github.com/lumeajs/lumea/releases/download/${version}/${artifactName}-${downloadName}`;
 
 	console.log(`Downloading ${url}`);
 	await downloadFile(url, path.join(dirname, "dist", platformPath));

@@ -6,6 +6,8 @@ const apiPath = path.join(__dirname, "api", "package.json");
 
 const version = process.argv[2];
 
+if (!version) throw new Error("Missing version");
+
 fs.writeFileSync(
 	packagePath,
 	JSON.stringify(

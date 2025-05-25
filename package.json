@@ -1,9 +1,14 @@
 {
-  "dependencies": {},
-  "devDependencies": {
-    "husky": "^9.1.7"
-  },
-  "scripts": {
-    "prepare": "husky"
-  }
+	"dependencies": {},
+	"devDependencies": {
+		"husky": "^9.1.7"
+	},
+	"scripts": {
+		"prepare": "husky",
+		"version": "node scripts/version.js",
+		"build:core": "cd core && cargo build",
+		"build:api": "cd api && npm run build",
+		"build:prep": "node scripts/prep_test.js",
+		"build": "npm run build:core && npm run build:api && npm run build:prep"
+	}
 }

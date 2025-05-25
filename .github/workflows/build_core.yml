@@ -77,10 +77,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ./core/target/
+            ./core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}-${{ hashFiles('core/Cargo.lock') }}-${{ steps.build-type.outputs.BUILD_TYPE }}
-          restore-keys: |
-            ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}-
 
       - name: Log Cargo and target folder sizes
         shell: bash
@@ -91,8 +89,14 @@ jobs:
           du -sh ~/.cargo/registry/cache/ || true
           echo "Cargo git db:"
           du -sh ~/.cargo/git/db/ || true
-          echo "core/target:"
-          du -sh ./core/target/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/deps/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/deps/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/build/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/build/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/incremental/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/incremental/ || true
 
       - name: Build
         shell: bash
@@ -113,8 +117,14 @@ jobs:
           du -sh ~/.cargo/registry/cache/ || true
           echo "Cargo git db:"
           du -sh ~/.cargo/git/db/ || true
-          echo "core/target:"
-          du -sh ./core/target/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/deps/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/deps/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/build/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/build/ || true
+          echo "core/target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/incremental/"
+          du -sh ./target/${{ matrix.settings.target }}/${{ steps.build-type.outputs.BUILD_TYPE }}/incremental/ || true
 
       - name: Rename and move binary
         shell: bash
@@ -130,6 +140,9 @@ jobs:
           if-no-files-found: error
 
   build_api:
+    needs: build_core
+    if: always()
+
     runs-on: ubuntu-latest
     permissions:
       contents: read

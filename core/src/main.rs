@@ -4,6 +4,7 @@ use rustyscript::{Module, Runtime, RuntimeOptions};
 
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
+use std::time::SystemTime;
 
 use colored::*;
 
@@ -120,11 +121,15 @@ fn load_embedded_assets() -> Vec<u8> {
 }
 
 fn main() {
+    let start = SystemTime::now();
+    println!("Startup at {}", start.elapsed().unwrap().as_millis());
+
     // Initialize logger
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format(|buf, record| writeln!(buf, "{}", record.args().to_string()))
         .init();
 
+    info!("Logger set up at {}", start.elapsed().unwrap().as_millis());
     debug!("Application starting...");
 
     // Replace panic hook to log errors with context
@@ -138,11 +143,24 @@ fn main() {
         }
     }));
 
+    info!(
+        "Panic hook set up at {}",
+        start.elapsed().unwrap().as_millis()
+    );
+
     let assets_zip = load_embedded_assets();
+
+    info!("Assets loaded at {}", start.elapsed().unwrap().as_millis());
+
     let reader = std::io::Cursor::new(assets_zip);
     let mut zip = zip::ZipArchive::new(reader).unwrap_or_else(|e| {
         panic!("Failed to open ZIP archive: {}", e);
     });
+
+    info!(
+        "ZIP archive opened at {}",
+        start.elapsed().unwrap().as_millis()
+    );
 
     let mut js = String::new();
     let mut smap_data = String::new();
@@ -160,16 +178,31 @@ fn main() {
             file.read_to_string(&mut js).unwrap_or_else(|e| {
                 panic!("Failed to read bundle.js: {}", e);
             });
+
+            info!(
+                "JavaScript loaded at {}",
+                start.elapsed().unwrap().as_millis()
+            );
         }
 
         if file.name() == "bundle.js.map" {
             debug!("Found bundle.js.map");
-            
+
             file.read_to_string(&mut smap_data).unwrap_or_else(|e| {
                 panic!("Failed to read bundle.js.map: {}", e);
             });
+
+            info!(
+                "Source map loaded at {}",
+                start.elapsed().unwrap().as_millis()
+            );
         }
     }
+
+    info!(
+        "All assets loaded at {}",
+        start.elapsed().unwrap().as_millis()
+    );
 
     if js.trim().is_empty() || smap_data.trim().is_empty() {
         warn!("One or more critical assets are empty",);
@@ -179,6 +212,11 @@ fn main() {
         panic!("Failed to parse source map: {}", e);
     });
 
+    info!(
+        "Source map parsed at {}",
+        start.elapsed().unwrap().as_millis()
+    );
+
     #[op2(fast)]
     fn op_add_example(a: i32, b: i32) -> i32 {
         a + b
@@ -186,26 +224,41 @@ fn main() {
 
     extension!(example_extension, ops = [op_add_example]);
 
+    info!(
+        "Extension loaded at {}",
+        start.elapsed().unwrap().as_millis()
+    );
+
     let module = Module::new("index.js", js);
+
+    info!("Module created at {}", start.elapsed().unwrap().as_millis());
+
     let mut runtime = Runtime::new(RuntimeOptions {
         extensions: vec![example_extension::init_ops_and_esm()],
         ..Default::default()
     })
     .unwrap_or_else(|e| {
-        panic!("Failed to JavaScript create runtime: {}", e,);
+        panic!("Failed to JavaScript create runtime: {}", e);
     });
 
-    info!("Loading module...");
+    info!(
+        "Runtime created at {}",
+        start.elapsed().unwrap().as_millis()
+    );
+
+    debug!("Loading module...");
     runtime
         .load_module(&module)
         .unwrap_or_else(|err| match &err {
             rustyscript::Error::JsError(js_err) => {
-                panic!("{}", format_js_error_as_node(js_err, &smap),);
+                panic!("{}", format_js_error_as_node(js_err, &smap));
             }
             _ => {
                 panic!("Non-JS error: {} ({}:{})", err, file!(), line!());
             }
         });
+
+    info!("Module loaded at {}", start.elapsed().unwrap().as_millis());
 
     debug!("Module loaded successfully.");
 }

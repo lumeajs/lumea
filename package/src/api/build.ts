@@ -115,5 +115,5 @@ export async function createBinary(dir: string, outBin: string) {
 	await bundleAssets(dir, tempPath);
 	addAssetsToBin(binPath, tempPath, outBin);
 
-	fs.rmSync(tempPath, { recursive: true });
+	fs.rmSync(tempPath, { recursive: true, force: true });
 }
